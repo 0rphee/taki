@@ -4,7 +4,8 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-applications = { path = "../applications", version ="0.1.1"}
+# applications = { path = "../applications", version ="0.1.1"}
+applications = { git = "https://github.com/0rphee/applications-rs.git", branch = "main" }
 gtk4 = "0.7.3"
 nucleo = "0.3.0"
 serde = { version = "1.0.195", features = ["derive"] }

@@ -11,6 +11,7 @@ checksum = "080e9890a082662b09c1ad45f567faeeb47f22b5fb23895fbe1e651e718e25ca"
 [[package]]
 name = "applications"
 version = "0.1.1"
+source = "git+https://github.com/0rphee/applications-rs.git?branch=main#79c5d14254a9d7b5b3287425bb1793e32054b1ea"
 dependencies = [
  "ini",
  "serde",
