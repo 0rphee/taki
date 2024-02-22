@@ -74,7 +74,7 @@ fn build_ui(app: &Application) {
     matcher_config.ignore_case = true;
     matcher_config.prefer_prefix = true;
     let matcher_notify_func = sync::Arc::new(|| {
-        println!("hello");
+        // println!("hello");
     });
     let matcher_thread_num = Some(2);
 
