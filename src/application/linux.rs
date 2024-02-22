@@ -171,7 +171,7 @@ impl super::AppL for DesktopEntry {
         todo!()
     }
 
-    fn scrubber(config: &Config) -> Result<Vec<(DesktopEntry, u64)>, Box<dyn std::error::Error>> {
+    fn scrubber(config: &Config) -> Result<Vec<DesktopEntry>, Box<dyn std::error::Error>> {
         // Create iterator over all the files in the XDG_DATA_DIRS
         // XDG compliancy is cool
         let user_path = match env::var("XDG_DATA_HOME") {
@@ -254,6 +254,6 @@ impl super::AppL for DesktopEntry {
         //     .enumerate()
         //     .map(|(i, (_, entry))| (entry, i as u64))
         //     .collect())
-        Ok(entries)
+        Ok(entries.into_iter().map(|(_, v)| v).collect())
     }
 }
