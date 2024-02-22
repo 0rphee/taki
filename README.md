@@ -2,6 +2,8 @@
 
 ## Build config
 
+Taken from here: <https://gtk-rs.org/gtk4-rs/stable/latest/book/installation.html>.
+
 ### linux 
 
 #### fedora
@@ -29,3 +31,8 @@ brew install gtk4 pkg-config
 
 pkg-config --modversion gtk4
 ```
+
+### windows
+
+[Installation instructions.](https://gtk-rs.org/gtk4-rs/stable/latest/book/installation_windows.html)
+
