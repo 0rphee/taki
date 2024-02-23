@@ -1,4 +1,4 @@
-# toki
+# taki
 
 ## Build config
 
