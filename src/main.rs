@@ -1,6 +1,6 @@
 use gtk4::{
-    glib, prelude::*, Application, ApplicationWindow, CssProvider, EntryBuffer, Label, ListBox,
-    Text,
+    builders::ScrolledWindowBuilder, glib, prelude::*, Application, ApplicationWindow, CssProvider,
+    EntryBuffer, Label, ListBox, ScrolledWindow, Text,
 };
 use nucleo::{
     self,
@@ -29,11 +29,13 @@ fn build_ui(app: &Application) {
         .margin_start(5)
         .margin_start(5)
         .build();
-    // let result_list_widg = gio::ListStore::new();
-    let result_list_widg = ListBox::new();
 
+    let result_list_widg = ListBox::new();
+    let scroll_widg = ScrolledWindow::builder().child(&result_list_widg).build();
+    // let result_list_widg = gio::ListStore::new();
     list_box_widg.append(&entry_box_widg);
-    list_box_widg.append(&result_list_widg);
+    // list_box_widg.append(&result_list_widg);
+    list_box_widg.append(&scroll_widg);
 
     let window_widg = ApplicationWindow::builder()
         .application(app)
