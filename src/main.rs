@@ -1,6 +1,6 @@
 use gtk4::{
-    builders::ScrolledWindowBuilder, glib, prelude::*, Application, ApplicationWindow, CssProvider,
-    EntryBuffer, Label, ListBox, ScrolledWindow, Text,
+    glib, prelude::*, Adjustment, Application, ApplicationWindow, CssProvider, EntryBuffer, Label,
+    ListBox, ScrolledWindow, Text,
 };
 use nucleo::{
     self,
@@ -21,7 +21,8 @@ fn main() -> glib::ExitCode {
 fn build_ui(app: &Application) {
     // let list_box_widg = gio::ListStore::new();
     let list_box_widg = ListBox::new();
-
+    list_box_widg.set_hexpand(true);
+    list_box_widg.set_vexpand(true);
     let entry_box_widg = Text::builder()
         .buffer(&EntryBuffer::new(Some("Yahoa")))
         .margin_top(5)
@@ -30,11 +31,18 @@ fn build_ui(app: &Application) {
         .margin_start(5)
         .build();
 
-    let result_list_widg = ListBox::new();
-    let scroll_widg = ScrolledWindow::builder().child(&result_list_widg).build();
-    // let result_list_widg = gio::ListStore::new();
+    entry_box_widg.set_hexpand(true);
+    entry_box_widg.set_vexpand(true);
+
+    let result_list_widg = ListBox::builder().hexpand(true).vexpand(true).build();
+    let scroll_widg = ScrolledWindow::builder()
+        .child(&result_list_widg)
+        .vexpand(true)
+        .hexpand(true)
+        .hscrollbar_policy(gtk4::PolicyType::Never)
+        .build();
+
     list_box_widg.append(&entry_box_widg);
-    // list_box_widg.append(&result_list_widg);
     list_box_widg.append(&scroll_widg);
 
     let window_widg = ApplicationWindow::builder()
