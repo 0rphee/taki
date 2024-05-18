@@ -1,12 +1,16 @@
+use gtk4::gdk;
+
 use gtk4::{
-    glib, prelude::*, Adjustment, Application, ApplicationWindow, CssProvider, EntryBuffer, Label,
-    ListBox, ScrolledWindow, Text,
+    glib, prelude::*, Adjustment, Application, ApplicationWindow, CssProvider, EntryBuffer,
+    EventControllerKey, Label, ListBox, ScrolledWindow, Text,
 };
 use nucleo::{
     self,
     pattern::{self},
 };
+use std::process::Command;
 use std::sync::{self, Arc, Mutex};
+use std::{ffi::OsStr, fs, path::PathBuf};
 
 mod application;
 
@@ -19,7 +23,6 @@ fn main() -> glib::ExitCode {
 }
 
 fn build_ui(app: &Application) {
-    // let list_box_widg = gio::ListStore::new();
     let list_box_widg = gtk4::Box::new(gtk4::Orientation::Vertical, 0);
     list_box_widg.set_hexpand(true);
     list_box_widg.set_vexpand(true);
@@ -32,6 +35,26 @@ fn build_ui(app: &Application) {
         .build();
 
     let result_list_widg = ListBox::builder().hexpand(true).vexpand(true).build();
+
+    // #######################################################
+    // TODO: MODIFICACIONES PARA EJECUTAR (ENTER)
+    let result_list_event_controller = gtk4::EventControllerKey::new();
+
+    // Connect key press event handler for ENTER key
+    result_list_event_controller.connect_key_pressed(
+        move |_controller, keyval, _keycode, _modifier_type_state| {
+            // Use pattern matching to handle the Option
+
+            println!("Controller widget{}", _controller);
+            if let gtk4::gdk::Key::Return = keyval {}
+
+            gtk4::glib::Propagation::Stop
+        },
+    );
+
+    result_list_widg.add_controller(result_list_event_controller);
+    // #######################################################
+
     let scroll_widg = ScrolledWindow::builder()
         .child(&result_list_widg)
         .vexpand(true)
@@ -61,6 +84,37 @@ fn build_ui(app: &Application) {
         &CssProvider::new(),
         1,
     );
+
+    // MODIFICACIONES PARA ESC
+
+    // #######################################################
+
+    // // Create an EventControllerKeys
+    // let keys_controller = gtk4::EventControllerKey::new();
+    // window_widg.add_controller(keys_controller);
+
+    // // Connect key press event handler for Escape key
+    // keys_controller.connect_key_pressed(move |_controller, keyval, _keycode, _state| {
+    //     // Use pattern matching to handle the Option
+    //     if let Key::Escape = keyval {
+    //         // Convert keyval to an integer
+    //         let keyval_int = keyval.into_int();
+    //         // Compare the integer value with the Escape key's keycode
+    //         if keyval_int == ESCAPE_KEYCODE {
+    //             // Handle Escape key press
+    //             println!("Escape key pressed!");
+    //             // Perform actions you want when Escape key is pressed
+    //             // For example, closing the window
+    //             window_widg.close();
+    //             gtk4::Inhibit(true) // Inhibit further processing of the event
+    //         } else {
+    //             gtk4::Inhibit(false) // Allow further processing of the event
+    //         }
+    //     } else {
+    //         gtk4::Inhibit(false) // Allow further processing of the event
+    //     }
+    // });
+    // #######################################################
 
     let desktop_entry_config = application::Config::default();
     let desktop_entries: &mut Arc<Vec<application::App>> = Box::leak(Box::new(Arc::new(
@@ -96,11 +150,13 @@ fn build_ui(app: &Application) {
     let mut label_widg_vec = Vec::new();
 
     for entry in desktop_entries.iter() {
+        let label_aux = Label::new(Some(&entry.name));
+        label_aux.add_controller(result_list_event_controller);
         label_widg_vec.push(Label::new(Some(&entry.name)));
+
         result_list_widg.append(label_widg_vec.last().unwrap());
-        // result_list_widg.append(&cur_widg);
-        // clone????
         injector.push(entry.name.as_str(), |dst| {
+            // clone????
             dst[0] = entry.name.clone().into();
         });
     }
