@@ -1,5 +1,4 @@
-use gtk4::gdk;
-
+use gtk4::{gdk, EventController};
 use gtk4::{
     glib, prelude::*, Adjustment, Application, ApplicationWindow, CssProvider, EntryBuffer,
     EventControllerKey, Label, ListBox, ScrolledWindow, Text,
@@ -38,21 +37,21 @@ fn build_ui(app: &Application) {
 
     // #######################################################
     // TODO: MODIFICACIONES PARA EJECUTAR (ENTER)
-    let result_list_event_controller = gtk4::EventControllerKey::new();
+    // let result_list_event_controller = gtk4::EventControllerKey::new();
 
-    // Connect key press event handler for ENTER key
-    result_list_event_controller.connect_key_pressed(
-        move |_controller, keyval, _keycode, _modifier_type_state| {
-            // Use pattern matching to handle the Option
+    // // Connect key press event handler for ENTER key
+    // result_list_event_controller.connect_key_pressed(
+    //     move |_controller, keyval, _keycode, _modifier_type_state| {
+    //         // Use pattern matching to handle the Option
 
-            println!("Controller widget{}", _controller);
-            if let gtk4::gdk::Key::Return = keyval {}
+    //         println!("Controller widget{}", _controller);
+    //         if let gtk4::gdk::Key::Return = keyval {}
 
-            gtk4::glib::Propagation::Stop
-        },
-    );
+    //         gtk4::glib::Propagation::Stop
+    //     },
+    // );
 
-    result_list_widg.add_controller(result_list_event_controller);
+    // result_list_widg.add_controller(result_list_event_controller);
     // #######################################################
 
     let scroll_widg = ScrolledWindow::builder()
@@ -84,37 +83,6 @@ fn build_ui(app: &Application) {
         &CssProvider::new(),
         1,
     );
-
-    // MODIFICACIONES PARA ESC
-
-    // #######################################################
-
-    // // Create an EventControllerKeys
-    // let keys_controller = gtk4::EventControllerKey::new();
-    // window_widg.add_controller(keys_controller);
-
-    // // Connect key press event handler for Escape key
-    // keys_controller.connect_key_pressed(move |_controller, keyval, _keycode, _state| {
-    //     // Use pattern matching to handle the Option
-    //     if let Key::Escape = keyval {
-    //         // Convert keyval to an integer
-    //         let keyval_int = keyval.into_int();
-    //         // Compare the integer value with the Escape key's keycode
-    //         if keyval_int == ESCAPE_KEYCODE {
-    //             // Handle Escape key press
-    //             println!("Escape key pressed!");
-    //             // Perform actions you want when Escape key is pressed
-    //             // For example, closing the window
-    //             window_widg.close();
-    //             gtk4::Inhibit(true) // Inhibit further processing of the event
-    //         } else {
-    //             gtk4::Inhibit(false) // Allow further processing of the event
-    //         }
-    //     } else {
-    //         gtk4::Inhibit(false) // Allow further processing of the event
-    //     }
-    // });
-    // #######################################################
 
     let desktop_entry_config = application::Config::default();
     let desktop_entries: &mut Arc<Vec<application::App>> = Box::leak(Box::new(Arc::new(
@@ -150,8 +118,8 @@ fn build_ui(app: &Application) {
     let mut label_widg_vec = Vec::new();
 
     for entry in desktop_entries.iter() {
-        let label_aux = Label::new(Some(&entry.name));
-        label_aux.add_controller(result_list_event_controller);
+        // let label_aux = Label::new(Some(&entry.name));
+        // label_aux.add_controller(result_list_event_controller);
         label_widg_vec.push(Label::new(Some(&entry.name)));
 
         result_list_widg.append(label_widg_vec.last().unwrap());
@@ -227,6 +195,26 @@ fn build_ui(app: &Application) {
             println!("Change! current text is '{}'", new_entry_str);
         }
     });
+    // MODIFICACIONES PARA ESC
+
+    // #######################################################
+
+    let window_widg_event_controller = EventControllerKey::new();
+    let window_aux = window_widg.clone();
+    window_widg_event_controller.connect_key_pressed(move |_, keyval, _, _| {
+        if keyval == gdk::Key::Escape {
+            // Check if the text entry field has focus
+            if entry_box_widg.has_focus() {
+                // Close the application if the text field has focus
+                window_aux.close();
+            } else {
+                // Give focus to the text field if it doesn't have it
+                entry_box_widg.grab_focus();
+            }
+        }
+        gtk4::glib::Propagation::Stop
+    }); // #######################################################
+    window_widg.add_controller(window_widg_event_controller);
 
     window_widg.present();
 }
