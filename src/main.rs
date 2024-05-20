@@ -1,4 +1,4 @@
-use gtk4::{gdk, EventController};
+use gtk4::{gdk, EventController, EventControllerScroll};
 use gtk4::{
     glib, prelude::*, Adjustment, Application, ApplicationWindow, CssProvider, EntryBuffer,
     EventControllerKey, Label, ListBox, ScrolledWindow, Text,
@@ -8,6 +8,7 @@ use nucleo::{
     pattern::{self},
 };
 use std::process::Command;
+use std::rc::Rc;
 use std::sync::{self, Arc, Mutex};
 use std::{ffi::OsStr, fs, path::PathBuf};
 
@@ -117,10 +118,24 @@ fn build_ui(app: &Application) {
 
     let mut label_widg_vec = Vec::new();
 
+    let label_controller = EventControllerKey::new();
+
+    label_controller.connect_key_pressed(
+        move |_controller, keyval, _keycode, _modifier_type_state| {
+            // Use pattern matching to handle the Option
+
+            if let gtk4::gdk::Key::Return = keyval {
+                println!("Controller widget{}", _controller.widget());
+            }
+
+            gtk4::glib::Propagation::Stop
+        },
+    );
     for entry in desktop_entries.iter() {
-        // let label_aux = Label::new(Some(&entry.name));
+        let label_aux = Label::new(Some(&entry.name));
         // label_aux.add_controller(result_list_event_controller);
-        label_widg_vec.push(Label::new(Some(&entry.name)));
+        label_aux.add_controller(label_controller.clone());
+        label_widg_vec.push(label_aux);
 
         result_list_widg.append(label_widg_vec.last().unwrap());
         injector.push(entry.name.as_str(), |dst| {
@@ -201,6 +216,7 @@ fn build_ui(app: &Application) {
 
     let window_widg_event_controller = EventControllerKey::new();
     let window_aux = window_widg.clone();
+    // let desktop_aux = desktop_entries.clone();
     window_widg_event_controller.connect_key_pressed(move |_, keyval, _, _| {
         if keyval == gdk::Key::Escape {
             // Check if the text entry field has focus
@@ -212,9 +228,11 @@ fn build_ui(app: &Application) {
                 entry_box_widg.grab_focus();
             }
         }
-        gtk4::glib::Propagation::Stop
+        println!("{}", keyval);
+        gtk4::glib::Propagation::Proceed
     }); // #######################################################
     window_widg.add_controller(window_widg_event_controller);
+    let tab_controller: EventControllerKey = EventControllerKey::new();
 
     window_widg.present();
 }
