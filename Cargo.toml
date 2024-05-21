@@ -9,3 +9,4 @@ applications = { git = "https://github.com/0rphee/applications-rs.git", branch =
 gtk4 = "0.7.3"
 nucleo = "0.3.0"
 serde = { version = "1.0.195", features = ["derive"] }
+libc = "0.2"
