@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use std::env;
 use std::{ffi::OsStr, fs, path::PathBuf};
 
+#[derive(Debug)]
 pub struct DesktopEntry {
     pub exec: String,
     pub path: Option<PathBuf>,

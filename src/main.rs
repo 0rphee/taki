@@ -7,8 +7,6 @@ use nucleo::{
     self,
     pattern::{self},
 };
-use std::process::Command;
-use std::rc::Rc;
 use std::sync::{self, Arc, Mutex};
 use std::{ffi::OsStr, fs, path::PathBuf};
 
@@ -93,6 +91,7 @@ fn build_ui(app: &Application) {
 
             #[cfg(target_os = "macos")]
             for app in de.iter_mut() {
+                // Para remover el .app del nombre
                 app.name.truncate(app.name.len() - 4);
             }
             de
@@ -142,6 +141,10 @@ fn build_ui(app: &Application) {
             // clone????
             dst[0] = entry.name.clone().into();
         });
+    }
+
+    for i in desktop_entries.iter() {
+        println!("Entry info{:?}", i);
     }
 
     for i in 0..injector.injected_items() {
@@ -217,22 +220,42 @@ fn build_ui(app: &Application) {
     let window_widg_event_controller = EventControllerKey::new();
     let window_aux = window_widg.clone();
     // let desktop_aux = desktop_entries.clone();
-    window_widg_event_controller.connect_key_pressed(move |_, keyval, _, _| {
-        if keyval == gdk::Key::Escape {
-            // Check if the text entry field has focus
-            if entry_box_widg.has_focus() {
-                // Close the application if the text field has focus
-                window_aux.close();
-            } else {
-                // Give focus to the text field if it doesn't have it
-                entry_box_widg.grab_focus();
+    window_widg_event_controller.connect_key_pressed(
+        move |_controller, keyval, _keycode, _modifier_type_state| {
+            if keyval == gdk::Key::Escape {
+                // Check if the text entry field has focus
+                if entry_box_widg.has_focus() {
+                    // Close the application if the text field has focus
+                    window_aux.close();
+                } else {
+                    // Give focus to the text field if it doesn't have it
+                    entry_box_widg.grab_focus();
+                }
             }
-        }
-        println!("{}", keyval);
-        gtk4::glib::Propagation::Proceed
-    }); // #######################################################
+            // if keyval == gdk::Key::Tab {
+            //     if entry_box_widg.has_focus() {
+            //         result_list_widg.grab_focus();
+            //         if let Some(first_child) = result_list_widg.first_child() {
+            //             first_child.grab_focus();
+            //         }
+            //     } else if result_list_widg.has_focus() {
+            //         if let Some(current) = result_list_widg.focus_child() {
+            //             if let Some(next) = current.next_sibling() {
+            //                 next.grab_focus();
+            //             } else if let Some(first_child) = result_list_widg.first_child() {
+            //                 first_child.grab_focus();
+            //             }
+            //         } else if let Some(first_child) = result_list_widg.first_child() {
+            //             first_child.grab_focus();
+            //         }
+            //     }
+            // }
+            println!("{}", keyval);
+            gtk4::glib::Propagation::Proceed
+        },
+    ); // #######################################################
     window_widg.add_controller(window_widg_event_controller);
-    let tab_controller: EventControllerKey = EventControllerKey::new();
+    application::exec_app(desktop_entries, String::from("Logseq"));
 
     window_widg.present();
 }
