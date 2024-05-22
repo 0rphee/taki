@@ -1,6 +1,8 @@
 use crate::application::Config;
 use std::collections::HashMap;
 use std::env;
+use std::os::unix::process::CommandExt;
+use std::process::{Command, Stdio};
 use std::{ffi::OsStr, fs, path::PathBuf};
 
 #[derive(Debug)]
@@ -169,7 +171,35 @@ impl DesktopEntry {
 
 impl super::AppL for DesktopEntry {
     fn launch(&self) {
-        todo!()
+        println!("Exec path: { }", self.exec);
+
+        let mut command = Command::new(&self.exec);
+
+        command
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .stdin(Stdio::null());
+
+        // Según entendí esto sirve para desvincular el proceso padre del proceso hijo
+        #[cfg(unix)]
+        {
+            unsafe {
+                command.pre_exec(|| {
+                    libc::setsid();
+                    Ok(())
+                })
+            };
+        }
+
+        match command.spawn() {
+            Ok(mut child) => {
+                println!("Aplicación lanzada exitosamente con PID: {}", child.id());
+                let _ = child.wait();
+            }
+            Err(e) => {
+                eprintln!("Error al lanzar la aplicación: {}", e)
+            }
+        }
     }
 
     fn scrubber(config: &Config) -> Result<Vec<DesktopEntry>, Box<dyn std::error::Error>> {

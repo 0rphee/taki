@@ -1,14 +1,12 @@
-use gtk4::{gdk, EventController, EventControllerScroll};
 use gtk4::{
-    glib, prelude::*, Adjustment, Application, ApplicationWindow, CssProvider, EntryBuffer,
-    EventControllerKey, Label, ListBox, ScrolledWindow, Text,
+    glib, prelude::*, Application, ApplicationWindow, CssProvider, EntryBuffer, EventControllerKey,
+    Label, ListBox, ScrolledWindow, Text,
 };
 use nucleo::{
     self,
     pattern::{self},
 };
 use std::sync::{self, Arc, Mutex};
-use std::{ffi::OsStr, fs, path::PathBuf};
 
 mod application;
 
@@ -222,7 +220,7 @@ fn build_ui(app: &Application) {
     // let desktop_aux = desktop_entries.clone();
     window_widg_event_controller.connect_key_pressed(
         move |_controller, keyval, _keycode, _modifier_type_state| {
-            if keyval == gdk::Key::Escape {
+            if keyval == gtk4::gdk::Key::Escape {
                 // Check if the text entry field has focus
                 if entry_box_widg.has_focus() {
                     // Close the application if the text field has focus
@@ -255,7 +253,9 @@ fn build_ui(app: &Application) {
         },
     ); // #######################################################
     window_widg.add_controller(window_widg_event_controller);
-    application::exec_app(desktop_entries, String::from("Logseq"));
+
+    // test launch
+    application::exec_app(&desktop_entries, "Visual Studio Code");
 
     window_widg.present();
 }
