@@ -1,12 +1,14 @@
 use gtk4::{
     glib, prelude::*, Application, ApplicationWindow, CssProvider, EntryBuffer, EventControllerKey,
-    Label, ListBox, ScrolledWindow, Text,
+    Label, ListBox, ListBoxRow, ScrolledWindow, Text,
 };
 use nucleo::{
     self,
     pattern::{self},
 };
 use std::sync::{self, Arc, Mutex};
+
+use crate::application::exec_app;
 
 mod application;
 
@@ -31,25 +33,6 @@ fn build_ui(app: &Application) {
         .build();
 
     let result_list_widg = ListBox::builder().hexpand(true).vexpand(true).build();
-
-    // #######################################################
-    // TODO: MODIFICACIONES PARA EJECUTAR (ENTER)
-    // let result_list_event_controller = gtk4::EventControllerKey::new();
-
-    // // Connect key press event handler for ENTER key
-    // result_list_event_controller.connect_key_pressed(
-    //     move |_controller, keyval, _keycode, _modifier_type_state| {
-    //         // Use pattern matching to handle the Option
-
-    //         println!("Controller widget{}", _controller);
-    //         if let gtk4::gdk::Key::Return = keyval {}
-
-    //         gtk4::glib::Propagation::Stop
-    //     },
-    // );
-
-    // result_list_widg.add_controller(result_list_event_controller);
-    // #######################################################
 
     let scroll_widg = ScrolledWindow::builder()
         .child(&result_list_widg)
@@ -115,23 +98,9 @@ fn build_ui(app: &Application) {
 
     let mut label_widg_vec = Vec::new();
 
-    let label_controller = EventControllerKey::new();
-
-    label_controller.connect_key_pressed(
-        move |_controller, keyval, _keycode, _modifier_type_state| {
-            // Use pattern matching to handle the Option
-
-            if let gtk4::gdk::Key::Return = keyval {
-                println!("Controller widget{}", _controller.widget());
-            }
-
-            gtk4::glib::Propagation::Stop
-        },
-    );
     for entry in desktop_entries.iter() {
         let label_aux = Label::new(Some(&entry.name));
         // label_aux.add_controller(result_list_event_controller);
-        label_aux.add_controller(label_controller.clone());
         label_widg_vec.push(label_aux);
 
         result_list_widg.append(label_widg_vec.last().unwrap());
@@ -218,6 +187,7 @@ fn build_ui(app: &Application) {
     let window_widg_event_controller = EventControllerKey::new();
     let window_aux = window_widg.clone();
     // let desktop_aux = desktop_entries.clone();
+    let desktop_entries_aux = desktop_entries.clone();
     window_widg_event_controller.connect_key_pressed(
         move |_controller, keyval, _keycode, _modifier_type_state| {
             if keyval == gtk4::gdk::Key::Escape {
@@ -248,14 +218,40 @@ fn build_ui(app: &Application) {
             //         }
             //     }
             // }
+
+            if let gtk4::gdk::Key::Return = keyval {
+                let listbox: ListBox = _controller
+                    .widget() // GtkApplicationWindow
+                    .first_child() // GtkBox
+                    .and_then(|this| {
+                        this.last_child()? // GtkScrolledWindow
+                            .first_child()? // GtkViewport
+                            .first_child()? // GtkListBox
+                            .dynamic_cast() // Cast Window -> ListBox
+                            .ok() // Convert Result<(), ListBox> to Ok<ListBox>
+                    })
+                    .unwrap_or_else(|| unreachable!());
+
+                let selected_row_label: Label = match listbox.selected_row() {
+                    Some(row) => row.child().unwrap().dynamic_cast().unwrap(),
+                    None => return gtk4::glib::Propagation::Proceed, // if there is not a selected row
+                };
+
+                println!(
+                    "Return Hit, selected: {}",
+                    selected_row_label.text().as_str()
+                );
+                exec_app(&desktop_entries_aux, selected_row_label.text().as_str());
+            }
+
             println!("{}", keyval);
             gtk4::glib::Propagation::Proceed
         },
-    ); // #######################################################
+    );
     window_widg.add_controller(window_widg_event_controller);
 
     // test launch
-    application::exec_app(&desktop_entries, "Visual Studio Code");
+    // application::exec_app(&desktop_entries, "Visual Studio Code");
 
     window_widg.present();
 }
