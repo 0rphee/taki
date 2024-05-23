@@ -41,6 +41,12 @@ pub fn exec_app(app_list: &[App], name: &str) {
     for entry in app_list.iter() {
         if entry.name == name {
             entry.launch();
+            break;
         }
     }
+}
+
+pub enum ExitApp {
+    Exit,
+    DontExit,
 }
