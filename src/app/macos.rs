@@ -32,6 +32,15 @@ impl super::AppL for applications::common::App {
     where
         Self: Sized,
     {
-        Result::Ok(applications::get_apps())
+        Result::Ok(
+            applications::get_apps()
+                .into_iter()
+                .map(|mut app| {
+                    // Para remover el .app del nombre
+                    app.name.truncate(app.name.len() - 4);
+                    app
+                })
+                .collect(),
+        )
     }
 }

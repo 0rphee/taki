@@ -1,4 +1,4 @@
-use super::application::{App, ExitApp};
+use super::app::{App, ExitApp};
 use super::event_handlers::return_pressed;
 use gtk4::{
     prelude::*, Application, ApplicationWindow, EntryBuffer, Label, ListBox, ScrolledWindow, Text,
@@ -40,11 +40,13 @@ pub fn build_entry_box_widg(
     matcher: Arc<Mutex<nucleo::Nucleo<&str>>>,
 ) -> Text {
     let entry_text_box_widg = Text::builder()
-        .buffer(&EntryBuffer::new(Some("Yahoa")))
+        .buffer(&EntryBuffer::new(Option::<&str>::None))
         .margin_top(5)
         .margin_bottom(5)
         .margin_start(5)
         .margin_start(5)
+        .overwrite_mode(false)
+        .placeholder_text("Write your app name here!")
         .build();
     entry_text_box_widg.connect_activate(move |local_text_widg| {
         match return_pressed(

@@ -1,3 +1,5 @@
+use std::sync::Arc;
+
 use serde::Deserialize;
 
 #[cfg(target_os = "linux")]
@@ -8,8 +10,7 @@ mod linux;
 
 #[cfg(target_os = "macos")]
 pub type App = macos::App;
-// #[cfg(target_os = "macos")]
-// pub use macos::App;
+
 #[cfg(target_os = "macos")]
 mod macos;
 
@@ -49,4 +50,12 @@ pub fn exec_app(app_list: &[App], name: &str) {
 pub enum ExitApp {
     Exit,
     DontExit,
+}
+
+pub fn build_desktop_entries() -> &'static mut Arc<Vec<applications::common::App>> {
+    let desktop_entry_config = Config::default();
+    let desktop_entries: &mut Arc<Vec<App>> = Box::leak(Box::new(Arc::new({
+        AppL::scrubber(&desktop_entry_config).unwrap()
+    })));
+    desktop_entries
 }
