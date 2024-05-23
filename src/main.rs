@@ -1,3 +1,4 @@
+use application::App;
 use gtk4::{
     glib, prelude::*, Application, ApplicationWindow, CssProvider, EntryBuffer, EventControllerKey,
     Label, ListBox, ListBoxRow, ScrolledWindow, Text,
@@ -124,6 +125,19 @@ fn build_ui(app: &Application) {
     let child = Label::new(Some("text"));
     result_list_widg.append(&child);
 
+    let local_result_list_widg = result_list_widg.clone();
+    let desktop_entries_aux = desktop_entries.clone();
+    let window_widg_aux = window_widg.clone();
+    entry_box_widg.connect_activate(move |local_text_widg| {
+        match return_pressed(
+            &desktop_entries_aux,
+            &local_result_list_widg,
+            local_text_widg.text_length() == 0,
+        ) {
+            ExitApp::Exit => window_widg_aux.close(),
+            ExitApp::DontExit => (),
+        };
+    });
     entry_box_widg.connect_changed({
         move |new_entry_text| {
             let mut matcher = matcher.lock().unwrap();
@@ -185,43 +199,18 @@ fn build_ui(app: &Application) {
     // #######################################################
 
     let window_widg_event_controller = EventControllerKey::new();
-    let window_aux = window_widg.clone();
-    // let desktop_aux = desktop_entries.clone();
     let desktop_entries_aux = desktop_entries.clone();
     window_widg_event_controller.connect_key_pressed(
         move |_controller, keyval, _keycode, _modifier_type_state| {
-            if keyval == gtk4::gdk::Key::Escape {
-                // Check if the text entry field has focus
-                if entry_box_widg.has_focus() {
-                    // Close the application if the text field has focus
-                    window_aux.close();
-                } else {
-                    // Give focus to the text field if it doesn't have it
-                    entry_box_widg.grab_focus();
-                }
-            }
-            // if keyval == gdk::Key::Tab {
-            //     if entry_box_widg.has_focus() {
-            //         result_list_widg.grab_focus();
-            //         if let Some(first_child) = result_list_widg.first_child() {
-            //             first_child.grab_focus();
-            //         }
-            //     } else if result_list_widg.has_focus() {
-            //         if let Some(current) = result_list_widg.focus_child() {
-            //             if let Some(next) = current.next_sibling() {
-            //                 next.grab_focus();
-            //             } else if let Some(first_child) = result_list_widg.first_child() {
-            //                 first_child.grab_focus();
-            //             }
-            //         } else if let Some(first_child) = result_list_widg.first_child() {
-            //             first_child.grab_focus();
-            //         }
-            //     }
-            // }
+            println!("Key Pressed: {}", keyval);
 
-            if let gtk4::gdk::Key::Return = keyval {
-                let listbox: ListBox = _controller
-                    .widget() // GtkApplicationWindow
+            let local_window_widg: ApplicationWindow = _controller.widget().dynamic_cast().unwrap();
+            let local_text_widg: Text = local_window_widg
+                .first_child()
+                .and_then(|this| this.first_child()?.dynamic_cast::<Text>().ok())
+                .unwrap();
+            let get_list_box = || -> ListBox {
+                local_window_widg // GtkApplicationWindow
                     .first_child() // GtkBox
                     .and_then(|this| {
                         this.last_child()? // GtkScrolledWindow
@@ -230,21 +219,55 @@ fn build_ui(app: &Application) {
                             .dynamic_cast() // Cast Window -> ListBox
                             .ok() // Convert Result<(), ListBox> to Ok<ListBox>
                     })
-                    .unwrap_or_else(|| unreachable!());
+                    .unwrap_or_else(|| unreachable!())
+            };
 
-                let selected_row_label: Label = match listbox.selected_row() {
-                    Some(row) => row.child().unwrap().dynamic_cast().unwrap(),
-                    None => return gtk4::glib::Propagation::Proceed, // if there is not a selected row
-                };
+            match keyval {
+                gtk4::gdk::Key::Escape => {
+                    // Check if the text entry field has focus
+                    if entry_box_widg.has_focus() {
+                        // Close the application if the text field has focus
+                        local_window_widg.close();
+                    } else {
+                        // Give focus to the text field if it doesn't have it
+                        entry_box_widg.grab_focus();
+                    }
+                }
+                gtk4::gdk::Key::Tab => {
+                    let result_list_widg = get_list_box();
+                    if entry_box_widg.has_focus() {
+                        result_list_widg.grab_focus();
+                        if let Some(first_child) = result_list_widg.first_child() {
+                            first_child.grab_focus();
+                        }
+                    } else if result_list_widg.has_focus() {
+                        if let Some(current) = result_list_widg.focus_child() {
+                            if let Some(next) = current.next_sibling() {
+                                next.grab_focus();
+                            } else if let Some(first_child) = result_list_widg.first_child() {
+                                first_child.grab_focus();
+                            }
+                        } else if let Some(first_child) = result_list_widg.first_child() {
+                            first_child.grab_focus();
+                        }
+                    }
+                }
+                gtk4::gdk::Key::Return => {
+                    let result_listbox = get_list_box();
+                    match return_pressed(
+                        &desktop_entries_aux,
+                        &result_listbox,
+                        local_text_widg.text_length() == 0,
+                    ) {
+                        ExitApp::Exit => {
+                            local_window_widg.close();
+                        }
+                        ExitApp::DontExit => return gtk4::glib::Propagation::Proceed, // if the result listbox widget is empty (no rows)
+                    }
+                }
 
-                println!(
-                    "Return Hit, selected: {}",
-                    selected_row_label.text().as_str()
-                );
-                exec_app(&desktop_entries_aux, selected_row_label.text().as_str());
-            }
-
-            println!("{}", keyval);
+                _ => (),
+            };
             gtk4::glib::Propagation::Proceed
         },
     );
@@ -254,4 +277,42 @@ fn build_ui(app: &Application) {
     // application::exec_app(&desktop_entries, "Visual Studio Code");
 
     window_widg.present();
+}
+
+fn return_pressed(
+    desktop_entries_aux: &[App],
+    result_listbox: &ListBox,
+    entry_is_empty: bool,
+) -> ExitApp {
+    let selected_row_label: Label = match result_listbox.selected_row() {
+        Some(row) => row.child().unwrap().dynamic_cast::<Label>().unwrap(),
+        None => {
+            if entry_is_empty {
+                return ExitApp::DontExit;
+            };
+
+            match result_listbox.first_child() {
+                None => return ExitApp::DontExit,
+                Some(fst_row) => fst_row
+                    .dynamic_cast::<ListBoxRow>()
+                    .unwrap()
+                    .child()
+                    .unwrap()
+                    .dynamic_cast::<Label>()
+                    .unwrap(),
+            }
+        } // dont exit if the app list is empty
+    };
+
+    println!(
+        "Return Hit, selected: {}",
+        selected_row_label.text().as_str()
+    );
+    exec_app(desktop_entries_aux, selected_row_label.text().as_str());
+    return ExitApp::Exit;
+}
+
+enum ExitApp {
+    Exit,
+    DontExit,
 }
