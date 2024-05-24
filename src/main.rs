@@ -38,6 +38,7 @@ fn build_ui(app: &Application) {
             dst[0] = entry.name.clone().into();
         });
 
+        #[cfg(debug_assertions)]
         println!("Entry info{:?}", &entry);
     }
 

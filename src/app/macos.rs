@@ -6,6 +6,7 @@ use std::{
 
 impl super::AppL for applications::common::App {
     fn launch(&self) {
+        #[cfg(debug_assertions)]
         println!("Exec path: {:?}", self.app_path_exe);
 
         let mut command = Command::new(OsStr::new("open"));

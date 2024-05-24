@@ -77,7 +77,10 @@ pub fn build_entry_box_widg(
 
             let snapshot = matcher.snapshot();
             let matches = snapshot.matched_items(..);
+
+            #[cfg(debug_assertions)]
             println!("total matches={}", matches.len());
+
             let mut ref_vec = Vec::new();
 
             for nucleo::Item { data, .. } in matches {
@@ -94,17 +97,23 @@ pub fn build_entry_box_widg(
                     let name_str = label.text();
                     let name_str = name_str.as_str();
 
+                    #[cfg(debug_assertions)]
                     print!(
                         "checking i={} | name={:>22} data={:>20} ",
                         i, name_str, data
                     );
+
                     next = inner.next_sibling();
                     i += 1;
                     if *name_str == **data {
+                        #[cfg(debug_assertions)]
                         println!("matches!");
+
                         ref_vec.push(inner);
                     } else {
                         inner.set_visible(false);
+
+                        #[cfg(debug_assertions)]
                         println!();
                     }
                 }
@@ -112,6 +121,8 @@ pub fn build_entry_box_widg(
             for widget in ref_vec {
                 widget.set_visible(true);
             }
+
+            #[cfg(debug_assertions)]
             println!("Change! current text is '{}'", new_entry_str);
         }
     });

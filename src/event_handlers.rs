@@ -31,10 +31,12 @@ pub fn return_pressed(
         } // dont exit if the app list is empty
     };
 
+    #[cfg(debug_assertions)]
     println!(
         "Return Hit, selected: {}",
         selected_row_label.text().as_str()
     );
+
     exec_app(desktop_entries_aux, selected_row_label.text().as_str());
     return app::ExitApp::Exit;
 }
@@ -50,6 +52,7 @@ pub fn build_event_controller_key_handler(
 ) -> glib::Propagation
        + 'static {
     return move |_controller, keyval, _keycode, _modifier_type_state| {
+        #[cfg(debug_assertions)]
         println!("Key Pressed: {}", keyval);
 
         let local_window_widg: ApplicationWindow = _controller.widget().dynamic_cast().unwrap();
@@ -71,16 +74,6 @@ pub fn build_event_controller_key_handler(
         };
 
         match keyval {
-            gtk4::gdk::Key::Escape => {
-                // Check if the text entry field has focus
-                if entry_text_box_widg.has_focus() {
-                    // Close the application if the text field has focus
-                    local_window_widg.close();
-                } else {
-                    // Give focus to the text field if it doesn't have it
-                    entry_text_box_widg.grab_focus();
-                }
-            }
             gtk4::gdk::Key::Tab => {
                 let result_list_widg = get_list_box();
                 if entry_text_box_widg.has_focus() {
@@ -113,8 +106,24 @@ pub fn build_event_controller_key_handler(
                     app::ExitApp::DontExit => return gtk4::glib::Propagation::Proceed, // if the result listbox widget is empty (no rows)
                 }
             }
+            gtk4::gdk::Key::Escape => {
+                // Check if the text entry field has focus
+                if entry_text_box_widg.has_focus() {
+                    // Close the application if the text field has focus
+                    local_window_widg.close();
+                } else {
+                    // Give focus to the text field if it doesn't have it
+                    entry_text_box_widg.grab_focus_without_selecting();
+                }
+            }
 
-            _ => (),
+            _ => {
+                // Check if the text entry field has focus
+                if !entry_text_box_widg.has_focus() {
+                    // Give focus to the text field if it doesn't have it
+                    entry_text_box_widg.grab_focus_without_selecting();
+                }
+            }
         };
         gtk4::glib::Propagation::Proceed
     };
