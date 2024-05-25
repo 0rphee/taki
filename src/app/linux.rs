@@ -1,4 +1,4 @@
-use crate::application::Config;
+use crate::app::Config;
 use std::collections::HashMap;
 use std::env;
 use std::os::unix::process::CommandExt;

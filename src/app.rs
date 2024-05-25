@@ -52,7 +52,7 @@ pub enum ExitApp {
     DontExit,
 }
 
-pub fn build_desktop_entries() -> &'static mut Arc<Vec<applications::common::App>> {
+pub fn build_desktop_entries() -> &'static mut Arc<Vec<App>> {
     let desktop_entry_config = Config::default();
     let desktop_entries: &mut Arc<Vec<App>> = Box::leak(Box::new(Arc::new({
         AppL::scrubber(&desktop_entry_config).unwrap()

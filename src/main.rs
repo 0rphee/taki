@@ -18,7 +18,7 @@ fn main() -> glib::ExitCode {
 }
 
 fn build_ui(app: &Application) {
-    let desktop_entries: &mut Arc<Vec<app::App>> = app::build_desktop_entries();
+    let desktop_entries: &'static mut Arc<Vec<app::App>> = app::build_desktop_entries();
     let box_widg = build_box_widg();
     let window_widg = build_window_widg(app);
     window_widg.set_child(Some(&box_widg));
