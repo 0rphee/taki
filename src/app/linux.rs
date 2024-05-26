@@ -173,7 +173,8 @@ impl super::AppL for DesktopEntry {
     fn launch(&self) {
         println!("Exec path: { }", self.exec);
 
-        let mut command = Command::new(&self.exec);
+        let mut command = Command::new("sh");
+        command.arg("-c").arg(&self.exec);
 
         command
             .stdout(Stdio::null())
@@ -197,9 +198,15 @@ impl super::AppL for DesktopEntry {
                 let _ = child.wait();
             }
             Err(e) => {
-                eprintln!("Error al lanzar la aplicación: {}", e)
+                eprintln!("Error al lanzar la aplicaión {}", e)
             }
         }
+
+        // let command = Command::new("sh")
+        //     .arg("-c")
+        //     .arg(&self.exec)
+        //     .output()
+        //     .expect("failed to execute process");
     }
 
     fn scrubber(config: &Config) -> Result<Vec<DesktopEntry>, Box<dyn std::error::Error>> {
