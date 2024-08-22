@@ -181,17 +181,6 @@ impl super::AppL for DesktopEntry {
             .stderr(Stdio::null())
             .stdin(Stdio::null());
 
-        // Según entendí esto sirve para desvincular el proceso padre del proceso hijo
-        #[cfg(unix)]
-        {
-            unsafe {
-                command.pre_exec(|| {
-                    libc::setsid();
-                    Ok(())
-                })
-            };
-        }
-
         match command.spawn() {
             Ok(mut child) => {
                 println!("Aplicación lanzada exitosamente con PID: {}", child.id());
